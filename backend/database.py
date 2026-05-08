@@ -2,10 +2,17 @@ from sqlalchemy import create_engine, Column, String, Float, Integer, Boolean, D
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
+import os
 
-DATABASE_URL = "sqlite:///./sentinel.db"
+# Use PostgreSQL in production, SQLite in development
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sentinel.db")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# PostgreSQL connection
+if DATABASE_URL.startswith("postgresql"):
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+else:
+    # SQLite connection (local development)
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

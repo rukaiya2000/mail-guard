@@ -121,17 +121,17 @@ Legitimate: "{legitimate_example}"
 → Internal sender, business context, no suspicious elements = LEGITIMATE (0.98)
 
 EMAIL TO CLASSIFY:
-{email}
+{{email}}
 
 RESPOND ONLY WITH THIS JSON:
-{{
+{{{{
     "label": "PHISHING" | "SPAM" | "LEGITIMATE",
     "confidence": 0.0-1.0,
     "reasoning": "2-3 sentence explanation citing specific evidence",
     "key_indicators": ["indicator1", "indicator2", "indicator3"],
     "threat_score": 0.0-1.0,
     "confidence_calibration": "high|medium|low"
-}}""".format(
+}}}}""".format(
         phishing_example=PHISHING_EXAMPLE,
         spam_example=SPAM_EXAMPLE,
         legitimate_example=LEGITIMATE_EXAMPLE
