@@ -25,6 +25,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String, nullable=True)
     google_id = Column(String, unique=True, nullable=True, index=True)
+    google_access_token = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -55,6 +56,7 @@ class ClassificationLog(Base):
     tokens_used = Column(Integer)
     success = Column(Boolean, index=True)
     error_message = Column(String, nullable=True)
+    gmail_message_id = Column(String, nullable=True, index=True)
 
 
 def init_db():
