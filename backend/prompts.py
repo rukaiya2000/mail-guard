@@ -1,5 +1,33 @@
 """LLM prompts for email classification with versioning."""
 
+# Few-shot examples for in-context learning
+PHISHING_EXAMPLE = """From: security-alert@amazon-verify.xyz
+Subject: Urgent: Verify Your Account Immediately
+
+Dear Customer,
+Your Amazon account has been compromised. Click here to verify: http://bit.ly/amazverify
+Confirm your password now or your account will be suspended.
+- Amazon Security Team"""
+
+SPAM_EXAMPLE = """From: promo@store.marketing.com
+Subject: 50% OFF Everything This Weekend!
+
+Hi,
+Take 50% off all items! Use code WEEKEND50. Expires Sunday.
+Shop now: www.store.com
+Unsubscribe | View in Browser"""
+
+LEGITIMATE_EXAMPLE = """From: john.smith@company.com
+Subject: Q3 Quarterly Review - Action Items
+
+Hi Team,
+Following up on our meeting today, here are the Q3 action items:
+1. Complete financial reconciliation by EOW
+2. Submit performance reviews by Friday
+Let me know if you have questions.
+Thanks,
+John"""
+
 # Prompt versions with improvements
 CLASSIFICATION_PROMPTS = {
     "v1": """Analyze the following email and classify it as one of three categories:
@@ -63,6 +91,51 @@ Respond in ONLY this JSON format (no additional text):
     "confidence": 0.0-1.0,
     "reasoning": "Clear, concise explanation"
 }}""",
+
+    "v4": """You are an expert email security analyst at a major enterprise. Your task is to classify emails for phishing, spam, or legitimacy.
+
+CLASSIFICATION GUIDELINES:
+- PHISHING: Credential harvesting, account compromise, malware links, impersonation (urgency + action = higher risk)
+- SPAM: Unsolicited marketing, bulk promotional content with no business value
+- LEGITIMATE: Valid business communication, expected notifications, trusted senders
+
+ANALYZE IN THIS ORDER:
+1. SENDER ANALYSIS: Extract domain, check for spoofing patterns, lookalike characters
+2. CONTENT SIGNALS: Urgency language, suspicious links (short URLs, IP addresses), requests for sensitive data
+3. STRUCTURAL CLUES: Grammar quality, formatting consistency, authentication headers
+4. CONTEXTUAL RISK: Does this match expected sender behavior? Is the request reasonable?
+
+THREAT SCORING FACTORS:
+- Urgency + Password Request + Spoofed Domain = VERY HIGH PHISHING RISK
+- Marketing Language + Unsubscribe Link = SPAM
+- Business Context + No Suspicious Elements = LEGITIMATE
+
+EXAMPLES:
+Phishing: "{phishing_example}"
+→ Domain spoofing (amazon-verify), bit.ly URL, password request, urgency = PHISHING (0.95)
+
+Spam: "{spam_example}"
+→ Promotional content, unsubscribe link, mass marketing = SPAM (0.92)
+
+Legitimate: "{legitimate_example}"
+→ Internal sender, business context, no suspicious elements = LEGITIMATE (0.98)
+
+EMAIL TO CLASSIFY:
+{email}
+
+RESPOND ONLY WITH THIS JSON:
+{{
+    "label": "PHISHING" | "SPAM" | "LEGITIMATE",
+    "confidence": 0.0-1.0,
+    "reasoning": "2-3 sentence explanation citing specific evidence",
+    "key_indicators": ["indicator1", "indicator2", "indicator3"],
+    "threat_score": 0.0-1.0,
+    "confidence_calibration": "high|medium|low"
+}}""".format(
+        phishing_example=PHISHING_EXAMPLE,
+        spam_example=SPAM_EXAMPLE,
+        legitimate_example=LEGITIMATE_EXAMPLE
+    ),
 }
 
 # Model configurations with costs

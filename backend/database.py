@@ -71,6 +71,8 @@ class ClassificationLog(Base):
     success = Column(Boolean, index=True)
     error_message = Column(String, nullable=True)
     gmail_message_id = Column(String, nullable=True, index=True)
+    model = Column(String(50), default="llama-3.1-70b-instruct")
+    prompt_version = Column(String(10), default="v2")
 
     user = relationship("User", back_populates="classifications")
 
@@ -81,6 +83,23 @@ class ClassificationLog(Base):
         Index('ix_user_success', 'user_id', 'success'),
         Index('ix_label_timestamp', 'label', 'timestamp'),
         Index('ix_email_hash_user', 'email_hash', 'user_id'),
+    )
+
+
+class ClassificationFeedback(Base):
+    __tablename__ = "classification_feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    classification_id = Column(Integer, ForeignKey("classification_logs.id", ondelete="CASCADE"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    is_correct = Column(Boolean, nullable=True)
+    correct_label = Column(String(20), nullable=True)
+    feedback_text = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    __table_args__ = (
+        Index('ix_user_classification', 'user_id', 'classification_id'),
+        Index('ix_user_feedback_date', 'user_id', 'created_at'),
     )
 
 

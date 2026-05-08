@@ -67,7 +67,9 @@ def _log_classification(email_text: str, email_hash: str, user_id: Optional[int]
                        label: str, confidence: float, reasoning: str,
                        latency_ms: float, tokens_used: int, success: bool,
                        error_message: Optional[str] = None,
-                       gmail_message_id: Optional[str] = None):
+                       gmail_message_id: Optional[str] = None,
+                       model: str = "llama-3.1-70b-instruct",
+                       prompt_version: str = "v2"):
     """Log classification result to database."""
     try:
         db = SessionLocal()
@@ -83,7 +85,9 @@ def _log_classification(email_text: str, email_hash: str, user_id: Optional[int]
             tokens_used=tokens_used,
             success=success,
             error_message=error_message,
-            gmail_message_id=gmail_message_id
+            gmail_message_id=gmail_message_id,
+            model=model,
+            prompt_version=prompt_version
         )
         db.add(log)
         db.commit()
@@ -170,7 +174,8 @@ def classify_email(email_text: str, user_id: Optional[int] = None,
             _log_classification(
                 email_text, email_hash, user_id,
                 label, confidence, reasoning,
-                latency_ms, tokens_used, True, None, gmail_message_id
+                latency_ms, tokens_used, True, None, gmail_message_id,
+                model=model, prompt_version=prompt_version
             )
 
             return {
@@ -223,7 +228,8 @@ def classify_email(email_text: str, user_id: Optional[int] = None,
     _log_classification(
         email_text, email_hash, user_id,
         "ERROR", 0.0, "",
-        latency_ms, 0, False, error_msg, gmail_message_id
+        latency_ms, 0, False, error_msg, gmail_message_id,
+        model=model, prompt_version=prompt_version
     )
 
     raise Exception(f"Classification failed after {MAX_RETRIES} attempts: {error_msg}")

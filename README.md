@@ -84,21 +84,123 @@ For detailed setup, environment configuration, troubleshooting, and more, see **
 - ✅ Project structure
 - ✅ Production deployment tips
 
-## New Features (v1.0+)
+## 🧠 Advanced AI/ML Features
 
-### 1. Search & Filter
+For comprehensive details on sophisticated machine learning techniques, see:
+- **[AI_ML_FEATURES.md](./backend/AI_ML_FEATURES.md)** - Advanced prompt engineering, ensemble classification, confidence calibration
+- **[ADVANCED_FEATURES.md](./backend/ADVANCED_FEATURES.md)** - User feedback loops, pattern detection, threat analysis, A/B testing
+- **[ACTIVE_LEARNING_AND_ADVERSARIAL.md](./backend/ACTIVE_LEARNING_AND_ADVERSARIAL.md)** - Human-in-the-loop learning, adversarial robustness testing
+- **[ML_ARCHITECTURE.md](./backend/ML_ARCHITECTURE.md)** - System design principles, threat analysis pipeline, interview talking points
+
+### Prompt Engineering (v1-v4)
+- **v4 (Production)**: Few-shot learning with chain-of-thought reasoning + threat scoring
+- **v3 (Expert Mode)**: Analysis framework with structured threat detection
+- **v2 (Enhanced)**: Detailed threat indicators and recommendations
+- **v1 (Baseline)**: Simple instruction-based classification
+
+### Ensemble Classification
+- Combines predictions from GPT-4, Llama, and Claude
+- Weighted voting based on model confidence
+- Shows consensus percentage and disagreements
+- Improves accuracy by 2-5% over single model
+
+```bash
+POST /api/v1/classify/ensemble
+{
+  "email_text": "...",
+  "models": ["gpt-4-turbo", "llama-3.1-70b-instruct", "claude-3-opus"]
+}
+```
+
+### Confidence Calibration
+- Measures if model confidence matches actual accuracy
+- Bin-based calibration curves to detect over/under-confidence
+- Identifies when to trust vs. distrust confidence scores
+- Statistical metrics for reliability assessment
+
+```bash
+GET /api/v1/models/comparison?days=30
+GET /api/v1/models/{model}/calibration
+```
+
+### Model Performance Comparison
+- Precision, recall, F1 scores by email type
+- Confidence-accuracy correlation
+- Best model selection per threat category
+- Performance trends over time
+
+### Statistical A/B Testing
+- Chi-squared tests for prompt version significance
+- P-value calculation (p < 0.05 = significant)
+- Automatic best prompt selection
+- Performance comparison with statistical rigor
+
+### User Feedback Loop
+- Mark classifications as correct/incorrect
+- Specify correct label if model was wrong
+- Tracks accuracy improvements over time
+- Enables continuous model learning
+
+### Phishing Pattern Detection
+- Most common keywords in phishing emails
+- Sender domain analysis and trends
+- Daily threat distribution trends
+- Risk indicators in high-confidence predictions
+
+### Advanced Threat Analysis
+- Multi-dimensional scoring: URLs + Headers + Credentials
+- SPF/DKIM/DMARC validation
+- Domain spoofing detection
+- Credential theft indicators
+- Overall threat score (0-1)
+
+### Active Learning (Human-in-the-Loop)
+- Automatically flag uncertain predictions (confidence < 0.70)
+- Human analysts review and correct flagged emails
+- Track accuracy improvement from feedback
+- Optimize human effort: review only 12-15% of emails
+- Measure impact of human review on model accuracy
+
+```bash
+GET /api/v1/active-learning/queue     # Get emails for review
+POST /api/v1/active-learning/review/{id}  # Submit corrections
+GET /api/v1/active-learning/metrics   # Track improvement
+```
+
+### Adversarial Robustness Testing
+- Test models against 7 evasion techniques:
+  - **Homograph attacks**: amaz0n.com (lookalike characters)
+  - **Unicode encoding**: zero-width character injection
+  - **Obfuscation**: keyword splitting (ver\nify)
+  - **HTML encoding**: &#118;erify (entity encoding)
+  - **Typo injection**: Am4z0n (intentional misspellings)
+  - **Context confusion**: legitimate language mixed with phishing
+  - **Case randomization**: VeRiFy (mixed case)
+- Measure robustness score (0-1) for each model
+- Benchmark across multiple models
+- Ensure models resist real-world attack techniques
+
+```bash
+POST /api/v1/adversarial/test-email    # Test single email
+POST /api/v1/adversarial/benchmark     # Compare models
+GET /api/v1/adversarial/attack-types   # Attack documentation
+```
+
+### New Features (v1.0+)
+
+#### 1. Search & Filter
 - Filter classification history by threat label (Phishing, Spam, Legitimate)
 - Search email snippets by text content
 - Real-time filtering without page reload
 
-### 2. Batch Classification
+#### 2. Batch Classification
 - Upload CSV files with multiple emails
 - Paste multiple emails (one per line)
 - Process up to 50 emails per batch
 - View detailed results with success/failure status
 - See summary statistics including distribution and average confidence
 
-### 3. Advanced Analytics
+#### 3. Advanced Analytics
 - **Distribution Chart**: Pie chart showing phishing, spam, and legitimate percentages
 - **Trends Chart**: 24-hour classification trends with volume and confidence metrics
 - **Peak Hours**: Identify busiest times for email classification
