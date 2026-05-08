@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 from collections import defaultdict
 import httpx
 from authlib.integrations.starlette_client import OAuth
+import base64
+import email
 
 from database import init_db, get_db, ClassificationLog, User, ActivityLog
 from classifier import classify_email
@@ -52,12 +54,13 @@ oauth.register(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
+    client_kwargs={"scope": "openid email profile https://www.googleapis.com/auth/gmail.readonly"},
 )
 
 
 class EmailRequest(BaseModel):
     email_text: str
+    gmail_message_id: str | None = None
 
 
 class BatchEmailRequest(BaseModel):
@@ -186,6 +189,80 @@ def get_me(current_user: User = Depends(get_current_user)):
     )
 
 
+@app.get("/gmail/inbox")
+async def get_gmail_inbox(current_user: User = Depends(get_current_user)):
+    """Fetch latest emails from user's Gmail inbox."""
+    if not current_user.google_access_token:
+        raise HTTPException(status_code=400, detail="Google access token not found. Please log in again.")
+
+    try:
+        # Get list of messages
+        headers = {"Authorization": f"Bearer {current_user.google_access_token}"}
+        async with httpx.AsyncClient() as client:
+            # Get list of message IDs
+            response = await client.get(
+                "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+                headers=headers,
+                params={"maxResults": 20, "labelIds": "INBOX"},
+            )
+            if response.status_code != 200:
+                print(f"Gmail API error: Status {response.status_code}, Response: {response.text}")
+                raise HTTPException(status_code=400, detail=f"Gmail API error: {response.text}")
+
+            message_ids = response.json().get("messages", [])
+            emails = []
+
+            # Fetch full content for each message
+            for msg in message_ids:
+                msg_response = await client.get(
+                    f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg['id']}",
+                    headers=headers,
+                    params={"format": "full"},
+                )
+                if msg_response.status_code == 200:
+                    msg_data = msg_response.json()
+                    headers_data = msg_data.get("payload", {}).get("headers", [])
+                    subject = next((h["value"] for h in headers_data if h["name"] == "Subject"), "No subject")
+                    from_addr = next((h["value"] for h in headers_data if h["name"] == "From"), "Unknown")
+                    date = next((h["value"] for h in headers_data if h["name"] == "Date"), "")
+
+                    # Extract body
+                    body = ""
+                    parts = msg_data.get("payload", {}).get("parts", [])
+                    if parts:
+                        for part in parts:
+                            if part["mimeType"] == "text/plain":
+                                data = part.get("body", {}).get("data", "")
+                                if data:
+                                    body = base64.urlsafe_b64decode(data + "==").decode("utf-8")
+                                    break
+                    if not body:
+                        body = msg_data.get("payload", {}).get("body", {}).get("data", "")
+                        if body:
+                            body = base64.urlsafe_b64decode(body + "==").decode("utf-8")
+
+                    snippet = msg_data.get("snippet", "")
+
+                    emails.append({
+                        "id": msg["id"],
+                        "subject": subject,
+                        "from": from_addr,
+                        "date": date,
+                        "snippet": snippet,
+                        "body": body or snippet,
+                    })
+
+        return {"emails": emails}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Gmail inbox error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Gmail inbox: {str(e)}")
+
+
 @app.get("/auth/google")
 async def google_auth(request: Request):
     """Redirect to Google OAuth consent screen."""
@@ -221,6 +298,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
                 username=name,
                 email=email,
                 google_id=google_id,
+                google_access_token=token.get("access_token"),
                 hashed_password=None,
             )
             db.add(user)
@@ -230,8 +308,13 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         else:
             # Link Google account to existing user
             user.google_id = google_id
+            user.google_access_token = token.get("access_token")
             db.commit()
             log_activity("login", user_id=user.id, details=f"Linked Google account")
+    else:
+        # Update access_token on every login (may have been refreshed)
+        user.google_access_token = token.get("access_token")
+        db.commit()
 
     # Create JWT token
     jwt_token = create_access_token(user.id, user.username)
@@ -315,7 +398,7 @@ def classify(
         raise HTTPException(status_code=400, detail="email_text cannot be empty")
 
     user_id = current_user.id if current_user else None
-    result = classify_email(request.email_text, user_id=user_id)
+    result = classify_email(request.email_text, user_id=user_id, gmail_message_id=request.gmail_message_id)
 
     log_activity("classify", user_id=user_id, details=f"Label: {result.get('label')}")
 

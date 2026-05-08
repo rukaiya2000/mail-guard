@@ -2,10 +2,17 @@ from sqlalchemy import create_engine, Column, String, Float, Integer, Boolean, D
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
+import os
 
-DATABASE_URL = "sqlite:///./sentinel.db"
+# Use PostgreSQL in production, SQLite in development
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sentinel.db")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# PostgreSQL connection
+if DATABASE_URL.startswith("postgresql"):
+    engine = create_engine(DATABASE_URL)
+else:
+    # SQLite connection (local development)
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -18,6 +25,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String, nullable=True)
     google_id = Column(String, unique=True, nullable=True, index=True)
+    google_access_token = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -48,6 +56,7 @@ class ClassificationLog(Base):
     tokens_used = Column(Integer)
     success = Column(Boolean, index=True)
     error_message = Column(String, nullable=True)
+    gmail_message_id = Column(String, nullable=True, index=True)
 
 
 def init_db():

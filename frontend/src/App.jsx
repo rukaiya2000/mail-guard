@@ -4,6 +4,7 @@ import Classifier from './components/Classifier'
 import BatchClassifier from './components/BatchClassifier'
 import Analytics from './components/Analytics'
 import About from './components/About'
+import GmailInbox from './components/GmailInbox'
 import Login from './components/Login'
 import { useTheme } from './ThemeContext'
 import { useAuth } from './AuthContext'
@@ -68,9 +69,10 @@ function App() {
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 overflow-x-auto" aria-label="Tabs">
-            {['dashboard', 'classifier', 'batch', 'analytics', 'about'].map((tab) => {
+            {['dashboard', 'gmail', 'classifier', 'batch', 'analytics', 'about'].map((tab) => {
               const labels = {
                 dashboard: 'Dashboard',
+                gmail: '📧 Gmail Inbox',
                 classifier: 'Email Classifier',
                 batch: 'Batch Classifier',
                 analytics: 'Analytics',
@@ -99,6 +101,7 @@ function App() {
       {/* Main Content */}
       <main className={`${isDark ? 'dark' : ''} px-4 sm:px-6 lg:px-8 py-8`}>
         {activeTab === 'dashboard' && <div className="max-w-7xl mx-auto"><Dashboard /></div>}
+        {activeTab === 'gmail' && <div className="max-w-7xl mx-auto"><GmailInbox /></div>}
         {activeTab === 'classifier' && <div className="max-w-7xl mx-auto"><Classifier /></div>}
         {activeTab === 'batch' && <div className="max-w-7xl mx-auto"><BatchClassifier /></div>}
         {activeTab === 'analytics' && <div className="max-w-7xl mx-auto"><Analytics /></div>}

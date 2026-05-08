@@ -17,7 +17,7 @@ def get_openai_client():
     )
 
 
-def classify_email(email_text: str, user_id: int = None):
+def classify_email(email_text: str, user_id: int = None, gmail_message_id: str = None):
     """Classify email as phishing, spam, or legitimate using LLM."""
     # Check cache for duplicate emails
     email_hash = hash_email(email_text)
@@ -54,7 +54,7 @@ Respond in JSON format:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="llama-3.1-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3
         )
@@ -83,7 +83,8 @@ Respond in JSON format:
             reasoning=reasoning,
             latency_ms=latency_ms,
             tokens_used=tokens_used,
-            success=True
+            success=True,
+            gmail_message_id=gmail_message_id
         )
         db.add(log)
         db.commit()
@@ -113,7 +114,8 @@ Respond in JSON format:
             latency_ms=latency_ms,
             tokens_used=0,
             success=False,
-            error_message=str(e)
+            error_message=str(e),
+            gmail_message_id=gmail_message_id
         )
         db.add(log)
         db.commit()

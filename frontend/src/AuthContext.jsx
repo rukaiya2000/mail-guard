@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
       // Store token and clean up URL
       setToken(tokenFromUrl)
       localStorage.setItem('token', tokenFromUrl)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${tokenFromUrl}`
       verifyToken(tokenFromUrl)
       // Clean up URL without reload
       window.history.replaceState({}, document.title, window.location.pathname)
@@ -26,6 +27,7 @@ export function AuthProvider({ children }) {
       const savedToken = localStorage.getItem('token')
       if (savedToken) {
         setToken(savedToken)
+        axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
         // Verify token is still valid
         verifyToken(savedToken)
       } else {
@@ -56,6 +58,7 @@ export function AuthProvider({ children }) {
     setUser(null)
     setToken(null)
     localStorage.removeItem('token')
+    delete axios.defaults.headers.common['Authorization']
   }
 
   return (
