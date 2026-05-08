@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(curl -s http://localhost:8000/gmail/inbox -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6IlJ1a2FpeWEga2hhbiIsImV4cCI6MTc3ODI5NDA4NH0.ukj5FBrva8G_hcXwVYXsBnaul6Wdzwd4_c3X55JGNuk')",
-      "Read(//private/tmp/**)"
-    ]
-  }
-}
