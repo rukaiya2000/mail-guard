@@ -45,7 +45,23 @@ secureai-sentinel/
 
 ## ⚡ Quick Start (5 minutes)
 
-### **See [SETUP.md](./SETUP.md) for detailed instructions**
+### Option A: Docker (Recommended)
+
+```bash
+# Set up environment
+cp .env.example .env        # Edit with your API key
+
+# Start everything with one command
+docker-compose up
+
+# Open browser: http://localhost:3000
+```
+
+See **[DOCKER_DEPLOYMENT.md](./DOCKER_DEPLOYMENT.md)** for Docker setup, cloud deployment options, and troubleshooting.
+
+### Option B: Local Development
+
+**See [SETUP.md](./SETUP.md) for detailed instructions**
 
 **Terminal 1 - Backend:**
 ```bash
