@@ -15,6 +15,9 @@ from .ensemble import router as ensemble_router
 from .model_comparison import router as model_comparison_router
 from .active_learning import router as active_learning_router
 from .adversarial import router as adversarial_router
+from .drift_detection import router as drift_router
+from .cost_optimization import router as cost_router
+from .monitoring import router as monitoring_router
 
 all_routers = [
     auth_router,
@@ -31,6 +34,9 @@ all_routers = [
     model_comparison_router,
     active_learning_router,
     adversarial_router,
+    drift_router,
+    cost_router,
+    monitoring_router,
 ]
 
 

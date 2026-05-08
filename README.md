@@ -90,6 +90,7 @@ For comprehensive details on sophisticated machine learning techniques, see:
 - **[AI_ML_FEATURES.md](./backend/AI_ML_FEATURES.md)** - Advanced prompt engineering, ensemble classification, confidence calibration
 - **[ADVANCED_FEATURES.md](./backend/ADVANCED_FEATURES.md)** - User feedback loops, pattern detection, threat analysis, A/B testing
 - **[ACTIVE_LEARNING_AND_ADVERSARIAL.md](./backend/ACTIVE_LEARNING_AND_ADVERSARIAL.md)** - Human-in-the-loop learning, adversarial robustness testing
+- **[DRIFT_COST_MONITORING.md](./backend/DRIFT_COST_MONITORING.md)** - Drift detection, cost optimization, real-time monitoring
 - **[ML_ARCHITECTURE.md](./backend/ML_ARCHITECTURE.md)** - System design principles, threat analysis pipeline, interview talking points
 
 ### Prompt Engineering (v1-v4)
@@ -184,6 +185,47 @@ GET /api/v1/active-learning/metrics   # Track improvement
 POST /api/v1/adversarial/test-email    # Test single email
 POST /api/v1/adversarial/benchmark     # Compare models
 GET /api/v1/adversarial/attack-types   # Attack documentation
+```
+
+### Model Drift Detection
+- Monitor accuracy, confidence, latency, and label distribution over time
+- Automatically detect when models degrade
+- Alert when retraining is recommended
+- Track trends and provide actionable recommendations
+- Typical alert: "Accuracy dropped 5% in last 7 days"
+
+```bash
+GET /api/v1/drift/status          # Current drift assessment
+GET /api/v1/drift/recommendations # Actionable recommendations
+```
+
+### Cost Optimization
+- Analyze cost-efficiency for each model (accuracy per dollar)
+- Identify opportunities to reduce costs 20-30%
+- Recommend model selection based on accuracy/cost tradeoff
+- Caching analysis to find duplicate classifications
+- Monthly cost projection and budgeting
+
+```bash
+GET /api/v1/cost/analysis           # Cost breakdown by model
+GET /api/v1/cost/optimization-plan  # Savings recommendations
+GET /api/v1/cost/caching-analysis   # Caching opportunities
+POST /api/v1/cost/model-selector    # Smart model selection
+GET /api/v1/cost/monthly-projection # Cost forecasting
+```
+
+### Real-Time Monitoring
+- Live system health metrics (uptime, latency, errors)
+- Hourly performance trends over 24 hours
+- Model and label distribution tracking
+- SLA compliance checking (99.5% uptime targets)
+- Single dashboard endpoint for all metrics
+
+```bash
+GET /api/v1/monitoring/realtime        # Quick metrics snapshot
+GET /api/v1/monitoring/health          # Health status with alerts
+GET /api/v1/monitoring/dashboard       # Complete dashboard data
+GET /api/v1/monitoring/sla-compliance  # SLA verification
 ```
 
 ### New Features (v1.0+)
