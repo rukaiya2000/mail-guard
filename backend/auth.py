@@ -73,5 +73,9 @@ def get_optional_user(
         user_id = payload.get("user_id")
         user = db.query(User).filter(User.id == user_id).first()
         return user
-    except:
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, HTTPException):
+        return None
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Unexpected error in get_optional_user: {str(e)}")
         return None

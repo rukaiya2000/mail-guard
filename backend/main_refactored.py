@@ -1,7 +1,7 @@
 """FastAPI application entry point for SecureAI Sentinel."""
 
 import os
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from slowapi import Limiter
@@ -45,6 +45,7 @@ app.add_middleware(
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    from fastapi import HTTPException
     return HTTPException(
         status_code=429,
         detail="Too many requests. Please try again later."
