@@ -1,0 +1,93 @@
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Python Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+sentinel.db
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Frontend Build
+frontend/dist/
+frontend/build/
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.log
+*.log.*
+
+# IDE-specific
+.vscode/settings.json
+.idea/workspace.xml
+
+# Temporary Files
+*.tmp
+*.temp
+.cache/
+
+# Credentials & Secrets
+.aws/
+.ssh/
+*.pem
+*.key
+secrets.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS Generated Files
+.env.*.swp
+.env.*.swo
