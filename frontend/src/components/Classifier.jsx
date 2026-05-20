@@ -6,7 +6,6 @@ const API_BASE_URL = 'http://localhost:8000'
 export default function Classifier() {
   const [emailText, setEmailText] = useState('')
   const [result, setResult] = useState(null)
-  const [parsedEmail, setParsedEmail] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -33,18 +32,8 @@ export default function Classifier() {
     try {
       setLoading(true)
       setError(null)
-
-      // Parse email headers
-      const parseResponse = await axios.post(`${API_BASE_URL}/parse-email`, {
-        email_text: emailText,
-      })
-      setParsedEmail(parseResponse.data)
-
-      // Classify email
-      const classifyResponse = await axios.post(`${API_BASE_URL}/classify`, {
-        email_text: emailText,
-      })
-      setResult(classifyResponse.data)
+      const response = await axios.post(`${API_BASE_URL}/classify`, { email_text: emailText })
+      setResult(response.data)
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to classify email. Please try again.')
     } finally {
@@ -56,7 +45,6 @@ export default function Classifier() {
 
   return (
     <div className="space-y-6">
-      {/* Input Section */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-xl font-bold mb-4 text-gray-800">Email Threat Classifier</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +55,7 @@ export default function Classifier() {
             <textarea
               value={emailText}
               onChange={(e) => setEmailText(e.target.value)}
-              placeholder="Paste the full email content here (including headers if available)..."
+              placeholder="Paste the full email content here..."
               rows="8"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
@@ -87,34 +75,6 @@ export default function Classifier() {
         </form>
       </div>
 
-      {/* Parsed Email Headers */}
-      {parsedEmail && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Email Headers</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.entries(parsedEmail.headers).map(([key, value]) => (
-              <div key={key}>
-                <p className="text-gray-600 text-sm font-medium capitalize">{key.replace('_', ' ')}</p>
-                <p className="text-gray-800 text-sm break-all">{value}</p>
-              </div>
-            ))}
-          </div>
-          {parsedEmail.extracted_addresses.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-gray-600 text-sm font-medium">Extracted Email Addresses</p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {parsedEmail.extracted_addresses.map((addr, idx) => (
-                  <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
-                    {addr}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Result Card */}
       {result && (
         <div className={`${colors.bg} border-2 ${colors.border} rounded-lg p-6`}>
           <div className="flex items-start justify-between mb-4">
@@ -155,7 +115,6 @@ export default function Classifier() {
           </div>
         </div>
       )}
-
     </div>
   )
 }

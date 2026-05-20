@@ -49,7 +49,6 @@ FRONTEND_URL=          # Frontend URL for OAuth redirect (default: http://localh
 | GET | `/me` | Required | Current user info |
 | GET | `/gmail/inbox` | Required | Fetch Gmail inbox |
 | POST | `/classify` | Optional | Classify a single email |
-| POST | `/parse-email` | — | Parse email headers |
 
 ## How Classification Works
 

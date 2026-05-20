@@ -11,8 +11,6 @@ from dotenv import load_dotenv
 
 from classifier import classify_email
 from auth import create_access_token, get_current_user, get_optional_user, CurrentUser
-from email_parser import parse_email_headers, extract_email_addresses
-from activity_logger import log_activity
 
 load_dotenv()
 
@@ -45,24 +43,12 @@ class EmailRequest(BaseModel):
     email_text: str
 
 
-class EmailParseRequest(BaseModel):
-    email_text: str
-
-
-class EmailParseResponse(BaseModel):
-    headers: dict
-    body: str
-    is_html: bool
-    extracted_addresses: list[str]
-
-
 class ClassificationResult(BaseModel):
     label: str
     confidence: float
     reasoning: str
     latency_ms: float
     tokens_used: int
-
 
 
 @app.get("/auth/google")
@@ -171,22 +157,6 @@ async def get_gmail_inbox(current_user: CurrentUser = Depends(get_current_user))
         raise HTTPException(status_code=500, detail=f"Failed to fetch Gmail inbox: {str(e)}")
 
 
-@app.post("/parse-email", response_model=EmailParseResponse)
-def parse_email(request: EmailParseRequest):
-    if not request.email_text.strip():
-        raise HTTPException(status_code=400, detail="email_text cannot be empty")
-
-    parsed = parse_email_headers(request.email_text)
-    addresses = extract_email_addresses(request.email_text)
-
-    return EmailParseResponse(
-        headers=parsed['headers'],
-        body=parsed['body'],
-        is_html=parsed['is_html'],
-        extracted_addresses=list(set(addresses)),
-    )
-
-
 @app.post("/classify", response_model=ClassificationResult)
 def classify(
     request: EmailRequest,
@@ -197,10 +167,7 @@ def classify(
 
     user_id = current_user.google_id if current_user else None
     result = classify_email(request.email_text, user_id=user_id)
-    log_activity("classify", user_id=user_id, details=f"Label: {result.get('label')}")
     return result
-
-
 
 
 @app.get("/")

@@ -1,0 +1,14 @@
+Analyze the following email and classify it as one of three categories:
+- PHISHING: Attempts to steal credentials, personal info, or financial data
+- SPAM: Unsolicited marketing, promotional, or commercial content
+- LEGITIMATE: Genuine business or personal correspondence
+
+Email to analyze:
+{email}
+
+Respond ONLY in JSON format:
+{{
+    "label": "PHISHING" | "SPAM" | "LEGITIMATE",
+    "confidence": 0.0-1.0,
+    "reasoning": "Brief explanation"
+}}
