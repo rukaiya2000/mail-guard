@@ -13,7 +13,7 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./sentinel.db")
+    DATABASE_URL: str = "sqlite:///./sentinel.db"
 
     # JWT Configuration
     JWT_SECRET: str = os.getenv("JWT_SECRET", "")
