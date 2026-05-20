@@ -1,19 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from fastapi.responses import StreamingResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
-from datetime import datetime
-from collections import defaultdict
 import os
 import base64
 import httpx
 from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
 
-from classifier import classify_email, get_classifications
+from classifier import classify_email
 from auth import create_access_token, get_current_user, get_optional_user, CurrentUser
-from export_utils import export_to_csv, export_to_pdf
 from email_parser import parse_email_headers, extract_email_addresses
 from activity_logger import log_activity
 
@@ -48,10 +45,6 @@ class EmailRequest(BaseModel):
     email_text: str
 
 
-class BatchEmailRequest(BaseModel):
-    emails: list[str]
-
-
 class EmailParseRequest(BaseModel):
     email_text: str
 
@@ -70,20 +63,6 @@ class ClassificationResult(BaseModel):
     latency_ms: float
     tokens_used: int
 
-
-class MetricsResponse(BaseModel):
-    total_calls: int
-    average_latency_ms: float
-    error_rate: float
-    total_tokens_used: int
-    estimated_cost: float
-
-
-class HistoryItem(BaseModel):
-    timestamp: datetime
-    label: str
-    confidence: float
-    email_snippet: str
 
 
 @app.get("/auth/google")
@@ -222,200 +201,6 @@ def classify(
     return result
 
 
-@app.post("/classify-batch")
-def classify_batch(
-    request: BatchEmailRequest,
-    current_user: CurrentUser = Depends(get_optional_user),
-):
-    if not request.emails:
-        raise HTTPException(status_code=400, detail="emails list cannot be empty")
-    if len(request.emails) > 50:
-        raise HTTPException(status_code=400, detail="Maximum 50 emails per batch")
-
-    user_id = current_user.google_id if current_user else None
-    results = []
-    for email in request.emails:
-        try:
-            result = classify_email(email, user_id=user_id)
-            results.append({"success": True, "data": result})
-        except Exception as e:
-            results.append({"success": False, "error": str(e)})
-
-    return {"total": len(request.emails), "results": results}
-
-
-@app.get("/metrics", response_model=MetricsResponse)
-def get_metrics(current_user: CurrentUser = Depends(get_optional_user)):
-    all_logs = get_classifications()
-    logs = [c for c in all_logs if c["success"]]
-    if current_user:
-        logs = [c for c in logs if c["user_id"] == current_user.google_id]
-
-    if not logs:
-        return MetricsResponse(total_calls=0, average_latency_ms=0.0, error_rate=0.0, total_tokens_used=0, estimated_cost=0.0)
-
-    total_calls = len(logs)
-    average_latency_ms = sum(c["latency_ms"] for c in logs) / total_calls
-    total_tokens_used = sum(c["tokens_used"] for c in logs)
-
-    total_attempted = len(all_logs)
-    error_count = sum(1 for c in all_logs if not c["success"])
-    error_rate = (error_count / total_attempted * 100) if total_attempted > 0 else 0.0
-    estimated_cost = (total_tokens_used / 1000) * 0.002
-
-    return MetricsResponse(
-        total_calls=total_calls,
-        average_latency_ms=round(average_latency_ms, 2),
-        error_rate=round(error_rate, 2),
-        total_tokens_used=total_tokens_used,
-        estimated_cost=round(estimated_cost, 4),
-    )
-
-
-@app.get("/history", response_model=list[HistoryItem])
-def get_history(
-    label: str = None,
-    search: str = None,
-    start_date: str = None,
-    end_date: str = None,
-    confidence_min: float = None,
-    current_user: CurrentUser = Depends(get_optional_user),
-):
-    logs = [c for c in get_classifications() if c["success"]]
-
-    if current_user:
-        logs = [c for c in logs if c["user_id"] == current_user.google_id]
-    if label and label.upper() != 'ALL':
-        logs = [c for c in logs if c["label"] == label.upper()]
-    if search:
-        logs = [c for c in logs if search.lower() in c["email_snippet"].lower()]
-    if start_date:
-        try:
-            start = datetime.fromisoformat(start_date)
-            logs = [c for c in logs if c["timestamp"] >= start]
-        except Exception:
-            pass
-    if end_date:
-        try:
-            end = datetime.fromisoformat(end_date)
-            logs = [c for c in logs if c["timestamp"] <= end]
-        except Exception:
-            pass
-    if confidence_min is not None:
-        confidence_min = max(0.0, min(1.0, confidence_min))
-        logs = [c for c in logs if c["confidence"] >= confidence_min]
-
-    logs = sorted(logs, key=lambda c: c["timestamp"], reverse=True)[:50]
-
-    return [
-        HistoryItem(
-            timestamp=c["timestamp"],
-            label=c["label"],
-            confidence=c["confidence"],
-            email_snippet=c["email_snippet"],
-        )
-        for c in logs
-    ]
-
-
-@app.get("/analytics")
-def get_analytics(
-    start_date: str = None,
-    end_date: str = None,
-    current_user: CurrentUser = Depends(get_optional_user),
-):
-    logs = [c for c in get_classifications() if c["success"]]
-    if current_user:
-        logs = [c for c in logs if c["user_id"] == current_user.google_id]
-
-    if start_date:
-        try:
-            start = datetime.fromisoformat(start_date)
-            logs = [c for c in logs if c["timestamp"] >= start]
-        except Exception:
-            pass
-    if end_date:
-        try:
-            end = datetime.fromisoformat(end_date)
-            logs = [c for c in logs if c["timestamp"] <= end]
-        except Exception:
-            pass
-
-    if not logs:
-        return {"distribution": {"PHISHING": 0, "SPAM": 0, "LEGITIMATE": 0}, "trends": [], "top_hours": []}
-
-    distribution = defaultdict(int)
-    for c in logs:
-        distribution[c["label"]] += 1
-
-    hourly_data = defaultdict(lambda: {"count": 0, "avg_confidence": []})
-    for c in logs:
-        hour = c["timestamp"].strftime("%Y-%m-%d %H:00")
-        hourly_data[hour]["count"] += 1
-        hourly_data[hour]["avg_confidence"].append(c["confidence"])
-
-    trends = []
-    for hour in sorted(hourly_data.keys())[-24:]:
-        data = hourly_data[hour]
-        trends.append({
-            "time": hour,
-            "count": data["count"],
-            "avg_confidence": sum(data["avg_confidence"]) / len(data["avg_confidence"]),
-        })
-
-    top_hours = sorted(hourly_data.items(), key=lambda x: x[1]["count"], reverse=True)[:5]
-    top_hours = [{"time": k, "count": v["count"]} for k, v in top_hours]
-
-    return {"distribution": dict(distribution), "trends": trends, "top_hours": top_hours}
-
-
-@app.get("/export/csv")
-def export_csv(
-    label: str = None,
-    current_user: CurrentUser = Depends(get_optional_user),
-):
-    logs = [c for c in get_classifications() if c["success"]]
-    if current_user:
-        logs = [c for c in logs if c["user_id"] == current_user.google_id]
-    if label and label.upper() != 'ALL':
-        logs = [c for c in logs if c["label"] == label.upper()]
-
-    logs = sorted(logs, key=lambda c: c["timestamp"], reverse=True)[:500]
-
-    if not logs:
-        raise HTTPException(status_code=404, detail="No classifications to export")
-
-    csv_data = export_to_csv(logs)
-    return StreamingResponse(
-        iter([csv_data]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=classifications.csv"},
-    )
-
-
-@app.get("/export/pdf")
-def export_pdf(
-    label: str = None,
-    current_user: CurrentUser = Depends(get_optional_user),
-):
-    logs = [c for c in get_classifications() if c["success"]]
-    if current_user:
-        logs = [c for c in logs if c["user_id"] == current_user.google_id]
-    if label and label.upper() != 'ALL':
-        logs = [c for c in logs if c["label"] == label.upper()]
-
-    logs = sorted(logs, key=lambda c: c["timestamp"], reverse=True)[:500]
-
-    if not logs:
-        raise HTTPException(status_code=404, detail="No classifications to export")
-
-    user_name = current_user.username if current_user else "User"
-    pdf_data = export_to_pdf(logs, user_name=user_name)
-    return StreamingResponse(
-        iter([pdf_data]),
-        media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=report.pdf"},
-    )
 
 
 @app.get("/")

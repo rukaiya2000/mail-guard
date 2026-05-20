@@ -6,21 +6,7 @@ export const API_ENDPOINTS = {
 
   // Classification
   CLASSIFY: '/api/v1/classify',
-  CLASSIFY_BATCH: '/api/v1/classify-batch',
   PARSE_EMAIL: '/api/v1/parse-email',
-
-  // Analytics
-  METRICS: '/api/v1/metrics',
-  HISTORY: '/api/v1/history',
-  ANALYTICS: '/api/v1/analytics',
-
-  // Activity
-  ACTIVITY: '/api/v1/activity',
-  ADMIN_ACTIVITY: '/api/v1/admin/activity',
-
-  // Export
-  EXPORT_CSV: '/api/v1/export/csv',
-  EXPORT_PDF: '/api/v1/export/pdf',
 
   // Gmail
   GMAIL_INBOX: '/api/v1/gmail/inbox',
@@ -65,7 +51,6 @@ export const TOAST_DURATIONS = {
 
 export const PAGINATION = {
   DEFAULT_LIMIT: 50,
-  MAX_BATCH_SIZE: 50,
 }
 
 export const TIMEOUTS = {

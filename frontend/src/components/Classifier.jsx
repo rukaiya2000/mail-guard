@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import HistoryTable from './HistoryTable'
 import axios from 'axios'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -157,8 +156,6 @@ export default function Classifier() {
         </div>
       )}
 
-      {/* History Table */}
-      <HistoryTable key={result ? result.label : 'initial'} />
     </div>
   )
 }

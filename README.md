@@ -6,10 +6,6 @@ An AI-powered email threat detection tool that classifies emails as phishing, sp
 
 - **Email Classifier** — Classifies emails as PHISHING, SPAM, or LEGITIMATE with confidence scores and reasoning
 - **Gmail Integration** — Sign in with Google to fetch and classify emails from your inbox
-- **Batch Classification** — Classify up to 50 emails at once
-- **Metrics & History** — In-memory tracking of classification history, latency, token usage, and cost estimates
-- **Analytics** — Distribution breakdown and hourly trends
-- **Export** — Download classification results as CSV or PDF
 
 ## Quick Start
 
@@ -53,13 +49,7 @@ FRONTEND_URL=          # Frontend URL for OAuth redirect (default: http://localh
 | GET | `/me` | Required | Current user info |
 | GET | `/gmail/inbox` | Required | Fetch Gmail inbox |
 | POST | `/classify` | Optional | Classify a single email |
-| POST | `/classify-batch` | Optional | Classify up to 50 emails |
 | POST | `/parse-email` | — | Parse email headers |
-| GET | `/metrics` | Optional | Aggregated stats |
-| GET | `/history` | Optional | Classification history |
-| GET | `/analytics` | Optional | Distribution and trends |
-| GET | `/export/csv` | Optional | Export as CSV |
-| GET | `/export/pdf` | Optional | Export as PDF |
 
 ## How Classification Works
 
@@ -76,6 +66,5 @@ The confidence (0.0–1.0) is decided by the LLM based on how many threat signal
 
 ## Notes
 
-- Classification history is **in-memory only** — it resets when the server restarts
 - No database is used — users are identified via Google ID embedded in the JWT
-- The `routes/` folder and old main files have been removed; all endpoints live in `main.py`
+- All endpoints live in `main.py`
