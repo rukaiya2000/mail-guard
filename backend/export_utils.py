@@ -7,22 +7,19 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from database import ClassificationLog
-
-
 def export_to_csv(logs):
     """Export classifications to CSV format."""
     data = []
     for log in logs:
         data.append({
-            'Timestamp': log.timestamp.isoformat(),
-            'Label': log.label,
-            'Confidence': f"{log.confidence:.2%}",
-            'Reasoning': log.reasoning,
-            'Latency (ms)': f"{log.latency_ms:.2f}",
-            'Tokens Used': log.tokens_used,
-            'Email Snippet': log.email_snippet,
-            'Success': 'Yes' if log.success else 'No',
+            'Timestamp': log["timestamp"].isoformat(),
+            'Label': log["label"],
+            'Confidence': f"{log['confidence']:.2%}",
+            'Reasoning': log["reasoning"],
+            'Latency (ms)': f"{log['latency_ms']:.2f}",
+            'Tokens Used': log["tokens_used"],
+            'Email Snippet': log["email_snippet"],
+            'Success': 'Yes' if log["success"] else 'No',
         })
 
     df = pd.DataFrame(data)
@@ -64,10 +61,10 @@ def export_to_pdf(logs, user_name="User", title="Classification Report"):
 
     # Statistics
     if logs:
-        phishing_count = sum(1 for log in logs if log.label == 'PHISHING')
-        spam_count = sum(1 for log in logs if log.label == 'SPAM')
-        legitimate_count = sum(1 for log in logs if log.label == 'LEGITIMATE')
-        avg_confidence = sum(log.confidence for log in logs) / len(logs)
+        phishing_count = sum(1 for log in logs if log["label"] == 'PHISHING')
+        spam_count = sum(1 for log in logs if log["label"] == 'SPAM')
+        legitimate_count = sum(1 for log in logs if log["label"] == 'LEGITIMATE')
+        avg_confidence = sum(log["confidence"] for log in logs) / len(logs)
 
         stats_data = [
             ['Metric', 'Count', 'Percentage'],
@@ -98,11 +95,12 @@ def export_to_pdf(logs, user_name="User", title="Classification Report"):
 
         table_data = [['Timestamp', 'Label', 'Confidence', 'Email Snippet']]
         for log in logs[:20]:  # Show first 20
+            snippet = log["email_snippet"]
             table_data.append([
-                log.timestamp.strftime('%Y-%m-%d %H:%M'),
-                log.label,
-                f"{log.confidence:.0%}",
-                log.email_snippet[:50] + '...' if len(log.email_snippet) > 50 else log.email_snippet,
+                log["timestamp"].strftime('%Y-%m-%d %H:%M'),
+                log["label"],
+                f"{log['confidence']:.0%}",
+                snippet[:50] + '...' if len(snippet) > 50 else snippet,
             ])
 
         table = Table(table_data, colWidths=[1.2*inch, 1*inch, 1*inch, 2.3*inch])

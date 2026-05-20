@@ -12,9 +12,6 @@ class Settings:
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
-    # Database
-    DATABASE_URL: str = "sqlite:///./sentinel.db"
-
     # JWT Configuration
     JWT_SECRET: str = os.getenv("JWT_SECRET", "")
     JWT_ALGORITHM: str = "HS256"
