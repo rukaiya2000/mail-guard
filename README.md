@@ -1,4 +1,4 @@
-# SecureAI Sentinel
+# Mail Guard
 
 An AI-powered email threat detection tool that classifies emails as phishing, spam, or legitimate using LLMs. Authenticate with Google to classify emails directly from your Gmail inbox.
 
@@ -62,8 +62,3 @@ To change the classification prompt, just edit `backend/prompts.txt`.
 ## Confidence Score
 
 The confidence (0.0–1.0) is decided by the LLM based on how many threat signals it finds. There is no separate scoring logic — the model self-reports its certainty.
-
-## Notes
-
-- No database is used — users are identified via Google ID embedded in the JWT
-- All endpoints live in `main.py`
